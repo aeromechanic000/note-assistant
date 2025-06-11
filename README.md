@@ -10,7 +10,7 @@ The process is powered by [Pollinations.AI](https://pollinations.ai/)!
 
 ## Minecraft AI
 
-🧜 **Meet Max**, our new AI assistant for the Minecraft AI community! Ask questions, get started with AIC profiles, or explore tutorials — Max@MinecraftAI ([Intl.](https://www.coze.com/s/ZmFp9aCtM/)/[CN](https://doubao.com/bot/8dV6HrwV)) is here to help.
+🧜 **Meet Max**, our AI assistant for the Minecraft AI community! Ask questions, get started with AIC profiles, or explore tutorials — Max@MinecraftAI ([Intl.](https://www.coze.com/s/ZmFp9aCtM/)/[CN](https://doubao.com/bot/8dV6HrwV)) is here to help.
 
 🦾 This is created by Minecraft AI, welcome to join the our Discord server for more communications! 
 
