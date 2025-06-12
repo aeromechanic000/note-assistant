@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
     <meta http-equiv="Content-Security-Policy" content="
     default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com;
     connect-src 'self' https://text.pollinations.ai https://image.pollinations.ai https://pollinations.ai;
@@ -316,6 +314,29 @@
             cursor: default;
         }
 
+        .text-area.limit-exceeded {
+            border-color: #f44336;
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.2);
+        }
+
+        .word-counter {
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+            margin-top: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .word-counter.warning {
+            color: #ff9800;
+            font-weight: bold;
+        }
+
+        .word-counter.exceeded {
+            color: #f44336;
+            font-weight: bold;
+        }
+
         .preview-container {
             flex: 1;
             width: 100%;
@@ -595,6 +616,8 @@ Example:
 - john sed he wil finsh the desing by fridy
 - sara agred to revew the code
 - next meeteng is nextt week"></textarea>
+                
+                <div id="word-counter" class="word-counter">0 / 1500 words</div>
             </div>
             
             <!-- Processing Column -->
@@ -701,6 +724,7 @@ Example:
         let currentProcessingMode = 'clean';
         let processedViewMode = 'preview'; // Changed default to preview
         let translationViewMode = 'raw';
+        const WORD_LIMIT = 1500;
         
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
@@ -713,8 +737,52 @@ Example:
             // File import
             document.getElementById('import-file').addEventListener('change', importFile);
             
+            // Input text area for word counting
+            document.getElementById('input-text').addEventListener('input', updateWordCount);
+            
             // Keyboard shortcuts
             document.addEventListener('keydown', handleKeyboard);
+        }
+
+        function updateWordCount() {
+            const inputText = document.getElementById('input-text').value;
+            const counter = document.getElementById('word-counter');
+            const textarea = document.getElementById('input-text');
+            
+            // Detect if text contains Chinese/Japanese/Korean characters
+            const isCJK = /[\u4e00-\u9fff\u3400-\u4dbf\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(inputText);
+            
+            let count;
+            let unit;
+            
+            if (isCJK) {
+                // Count characters for CJK languages
+                count = inputText.length;
+                unit = 'characters';
+            } else {
+                // Count words for other languages
+                count = inputText.trim() === '' ? 0 : inputText.trim().split(/\s+/).length;
+                unit = 'words';
+            }
+            
+            // Update counter display
+            counter.textContent = `${count} / ${WORD_LIMIT} ${unit}`;
+            
+            // Apply styling based on count
+            counter.classList.remove('warning', 'exceeded');
+            textarea.classList.remove('limit-exceeded');
+            
+            if (count > WORD_LIMIT) {
+                counter.classList.add('exceeded');
+                textarea.classList.add('limit-exceeded');
+            } else if (count > WORD_LIMIT * 0.9) {
+                counter.classList.add('warning');
+            }
+            
+            // Optionally prevent further input if limit exceeded
+            if (count > WORD_LIMIT) {
+                updateStatus(`⚠️ ${unit === 'characters' ? 'Character' : 'Word'} limit exceeded! Please reduce content to ${WORD_LIMIT} ${unit} or less.`);
+            }
         }
 
         function handleKeyboard(event) {
@@ -742,6 +810,7 @@ Example:
             const reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('input-text').value = e.target.result;
+                updateWordCount();
                 updateStatus(`File imported: ${file.name}`);
             };
             reader.readAsText(file);
@@ -751,6 +820,7 @@ Example:
         function clearInput() {
             if (confirm('Clear the input content?')) {
                 document.getElementById('input-text').value = '';
+                updateWordCount();
                 updateStatus('Input cleared');
             }
         }
@@ -759,6 +829,7 @@ Example:
             try {
                 const text = await navigator.clipboard.readText();
                 document.getElementById('input-text').value = text;
+                updateWordCount();
                 updateStatus('Content pasted from clipboard');
             } catch (err) {
                 updateStatus('Unable to access clipboard - please paste manually');
@@ -777,6 +848,7 @@ Example:
 - launh dat is tentatvly set for end of q3
 - next meeteng is schedld for nextt week tusday at 2pm
 - we shud also considr the testng fase befor launh`;
+            updateWordCount();
             updateStatus('Demo content loaded - try processing it!');
         }
 
@@ -860,6 +932,15 @@ Example:
                 return;
             }
 
+            // Check word/character limit
+            const isCJK = /[\u4e00-\u9fff\u3400-\u4dbf\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(inputText);
+            const count = isCJK ? inputText.length : (inputText.trim() === '' ? 0 : inputText.trim().split(/\s+/).length);
+            
+            if (count > WORD_LIMIT) {
+                updateStatus(`⚠️ Content exceeds ${WORD_LIMIT} ${isCJK ? 'characters' : 'words'} limit. Please reduce content size.`);
+                return;
+            }
+
             const processBtn = document.getElementById('process-btn');
             processBtn.classList.add('loading');
             processBtn.disabled = true;
@@ -882,7 +963,7 @@ Important: This is for CLEANING/FORMATTING only, NOT summarizing. Keep every pie
 Voice-converted note to clean:
 ${inputText}`;
                 } else {
-                    prompt = `You are a professional meeting summarizer. Please create a concise, hierarchical summary of this voice-converted note. Your task is to:
+                    prompt = `You are a professional note summarizer. Please create a concise, hierarchical summary of this voice-converted note. Your task is to:
 
 1. Extract and organize the KEY POINTS only
 2. Create a structured summary with clear sections
@@ -1005,6 +1086,7 @@ ${inputText}`;
 
         console.log('🎙️ Voice Note AI Processor loaded successfully with Pollinations AI!');
     </script>
+
 
 
 
